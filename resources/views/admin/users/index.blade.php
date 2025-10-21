@@ -96,7 +96,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex px-2 text-xs font-semibold leading-5 rounded-full
                                 {{ $user->hasRole('Administrator') ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}">
-                             {{ auth()->user()->role ?? 'Sin rol' }}
+                             {{ $user->role ?? 'Sin rol' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">

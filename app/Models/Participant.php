@@ -11,11 +11,17 @@ class Participant extends Model
 
     protected $fillable = [
         'name',
-        'email',
+        'last_name',
+        'dni',
         'phone',
+        'email',
         'organization',
         'position',
-        'dni',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function attendances()
@@ -23,16 +29,23 @@ class Participant extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    // Primer nombre desde 'name' (si solo guardas el nombre completo en 'name')
     public function getFirstNameAttribute(): string
     {
         $name = (string) ($this->attributes['name'] ?? '');
-        return trim(explode(' ', $name, 2)[0] ?? '');
+        $parts = preg_split('/\s+/', trim($name));
+        return $parts[0] ?? '';
     }
 
-    public function getLastNameAttribute(): string
+ // Usar la columna 'last_name' si existe; si no, intentar derivarlo desde 'name'
+    public function getLastNameAttribute($value): string
     {
+        if (!is_null($value) && $value !== '') {
+            return (string) $value;
+        }
+
         $name = (string) ($this->attributes['name'] ?? '');
-        $parts = explode(' ', $name, 2);
-        return isset($parts[1]) ? trim($parts[1]) : '';
+        $parts = preg_split('/\s+/', trim($name));
+        return count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
     }
 }

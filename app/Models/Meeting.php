@@ -24,6 +24,7 @@ class Meeting extends Model
         'date' => 'date',
         'opening_time' => 'datetime:H:i', // <- agregar
         'closing_time' => 'datetime:H:i',  // <- agregar
+        'attachments' => 'array',  // ← Asegúrate de tener esto
     ];
 
     public function creator()
@@ -51,17 +52,60 @@ class Meeting extends Model
     public function getOpeningTimeAttribute(): ?string
     {
         // ajusta si tienes columnas reales
-        if (!empty($this->attributes['opening_time'])) {
+        if (! empty($this->attributes['opening_time'])) {
             return (string) $this->attributes['opening_time'];
         }
+
         return isset($this->attributes['time']) ? (string) $this->attributes['time'] : null;
     }
 
     public function getClosingTimeAttribute(): ?string
     {
-        if (!empty($this->attributes['closing_time'])) {
+        if (! empty($this->attributes['closing_time'])) {
             return (string) $this->attributes['closing_time'];
         }
+
         return null; // si no manejas hora de cierre aún
+    }
+
+    public function participants()
+    {
+        return $this->belongsToMany(
+            \App\Models\Participant::class,
+            'attendances',
+            'meeting_id',
+            'participant_id'
+        );
+    }
+
+    // Opcional: incluir en arrays/JSON automáticamente
+    protected $appends = ['status_label', 'status_badge_classes'];
+
+    // Estado en español
+    public function getStatusLabelAttribute(): string
+    {
+        switch ($this->status) {
+            case 'draft':
+                return 'Borrador';
+            case 'open':
+                return 'Abierto';
+            case 'closed':
+                return 'Cerrado';
+            default:
+                return (string) $this->status;
+        }
+    }
+
+    // Clases CSS para el badge según estado (para limpiar el Blade)
+    public function getStatusBadgeClassesAttribute(): string
+    {
+        switch ($this->status) {
+            case 'open':
+                return 'bg-green-100 text-green-800';
+            case 'closed':
+                return 'bg-gray-100 text-gray-800';
+            default:
+                return 'bg-yellow-100 text-yellow-800';
+        }
     }
 }

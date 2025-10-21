@@ -35,7 +35,6 @@ class AttendanceController extends Controller
             'openMeetings', 'selectedMeeting', 'recentAttendances', 'totalAttendances'
         ));
     }
-
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -48,10 +47,14 @@ class AttendanceController extends Controller
             return back()->withErrors(['dni' => 'Participante no encontrado'])->withInput();
         }
 
-        Attendance::firstOrCreate(
+        $attendance = Attendance::firstOrCreate(
             ['meeting_id' => $data['meeting_id'], 'participant_id' => $participant->id],
             ['attended_at' => now(), 'status' => 'present']
         );
+
+        if (!$attendance->wasRecentlyCreated) {
+            return back()->withErrors(['dni' => 'El participante ya fue registrado en esta reunión.'])->withInput();
+        }
 
         return back()->with('success', 'Asistencia registrada.');
     }

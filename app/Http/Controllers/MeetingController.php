@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Meeting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class MeetingController extends Controller
@@ -59,11 +60,11 @@ class MeetingController extends Controller
     {
         // $meeting = Meeting::findOrFail($id);
 
-        //Cargar las asistencias de la reunión
+        // Cargar las asistencias de la reunión
         $attendances = $meeting->attendances()
-        ->with('participant')
-        ->orderBy('created_at', 'asc')
-        ->get();
+            ->with('participant')
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return view('secretary.meetings.show', compact('meeting', 'attendances'));
     }
@@ -71,6 +72,7 @@ class MeetingController extends Controller
     public function edit($id)
     {
         $meeting = Meeting::findOrFail($id);
+
         return view('secretary.meetings.edit', compact('meeting'));
     }
 
@@ -127,37 +129,28 @@ class MeetingController extends Controller
         return redirect()->route('meetings.index')->with('success', 'Reunión cerrada correctamente');
     }
 
-    public function generateReport($id)
+    public function generateReport(Meeting $meeting)
     {
-        $meeting = Meeting::with(['attendances.participant'])->findOrFail($id);
+        $meeting->load(['attendances.participant']);
 
-        // Verificar que tenga asistencias
         if ($meeting->attendances->count() === 0) {
             return redirect()->route('meetings.show', $meeting)
                 ->with('error', 'No hay asistencias registradas para generar el reporte');
         }
 
-        // Aquí irá la generación del PDF
-        // Por ahora retorna vista de prueba o mensaje
-        return redirect()->route('meetings.show', $meeting)
-            ->with('info', 'Generación de reportes PDF en desarrollo');
+        $pdf = Pdf::loadView('reports.meeting-pdf', [
+            'meeting' => $meeting,
+        ])->setPaper('a4');
+
+        $filename = sprintf(
+            'reunion-%d-%s.pdf',
+            $meeting->id,
+            \Illuminate\Support\Carbon::parse($meeting->date)->format('Y-m-d')
+        );
+
+        // return $pdf->download($filename);
+        // Si prefieres abrir en el navegador:
+        return $pdf->stream($filename);
     }
+
 }
-
-
-// <?php
-// use Barryvdh\DomPDF\Facade\Pdf;
-
-// public function generateReport($id)
-// {
-//     $meeting = Meeting::with(['attendances.participant'])->findOrFail($id);
-
-//     if ($meeting->attendances->count() === 0) {
-//         return redirect()->route('meetings.show', $meeting)
-//             ->with('error', 'No hay asistencias registradas');
-//     }
-
-//     $pdf = Pdf::loadView('reports.meeting-pdf', compact('meeting'));
-
-//     return $pdf->download('reunion-' . $meeting->id . '-' . $meeting->date->format('Y-m-d') . '.pdf');
-// }

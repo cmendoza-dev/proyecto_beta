@@ -48,3 +48,144 @@
         display: none !important;
     }
 }
+
+/* === Theme system (paletas profesionales) === */
+:root {
+  --color-bg: #f3f4f6;
+  --color-surface: #ffffff;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-sidebar: #1f2937;
+  --color-sidebar-active: #374151;
+  --color-primary: #2563eb;
+  --color-primary-contrast: #ffffff;
+  --color-success-bg: #ecfdf5;
+  --color-success-fg: #065f46;
+  --color-success-border: #a7f3d0;
+  --color-danger-bg: #fef2f2;
+  --color-danger-fg: #991b1b;
+  --color-danger-border: #fecaca;
+}
+
+/* Corporate (azul) */
+[data-theme="corporate"] {
+  --color-bg: #f3f4f6;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e5e7eb;
+  --color-sidebar: #111827;
+  --color-sidebar-active: #1f2937;
+  --color-primary: #2563eb;
+  --color-primary-contrast: #ffffff;
+  --color-success-bg: #ecfdf5;
+  --color-success-fg: #166534;
+  --color-success-border: #86efac;
+  --color-danger-bg: #fef2f2;
+  --color-danger-fg: #991b1b;
+  --color-danger-border: #fecaca;
+}
+
+/* Emerald (verde) */
+[data-theme="emerald"] {
+  --color-bg: #f0fdf4;
+  --color-surface: #ffffff;
+  --color-text: #064e3b;
+  --color-text-muted: #16a34a;
+  --color-border: #d1fae5;
+  --color-sidebar: #064e3b;
+  --color-sidebar-active: #065f46;
+  --color-primary: #10b981;
+  --color-primary-contrast: #052e25;
+  --color-success-bg: #ecfdf5;
+  --color-success-fg: #065f46;
+  --color-success-border: #a7f3d0;
+  --color-danger-bg: #fef2f2;
+  --color-danger-fg: #7f1d1d;
+  --color-danger-border: #fecaca;
+}
+
+/* Violet (morado) */
+[data-theme="violet"] {
+  --color-bg: #f5f3ff;
+  --color-surface: #ffffff;
+  --color-text: #2e1065;
+  --color-text-muted: #6d28d9;
+  --color-border: #e9d5ff;
+  --color-sidebar: #3b0764;
+  --color-sidebar-active: #4c1d95;
+  --color-primary: #7c3aed;
+  --color-primary-contrast: #ffffff;
+  --color-success-bg: #f3e8ff;
+  --color-success-fg: #4c1d95;
+  --color-success-border: #d8b4fe;
+  --color-danger-bg: #fef2f2;
+  --color-danger-fg: #7f1d1d;
+  --color-danger-border: #fecaca;
+}
+
+/* Amber (ámbar) */
+[data-theme="amber"] {
+  --color-bg: #fffbeb;
+  --color-surface: #ffffff;
+  --color-text: #78350f;
+  --color-text-muted: #b45309;
+  --color-border: #fde68a;
+  --color-sidebar: #78350f;
+  --color-sidebar-active: #92400e;
+  --color-primary: #f59e0b;
+  --color-primary-contrast: #1f2937;
+  --color-success-bg: #fef3c7;
+  --color-success-fg: #92400e;
+  --color-success-border: #fde68a;
+  --color-danger-bg: #fef2f2;
+  --color-danger-fg: #7f1d1d;
+  --color-danger-border: #fecaca;
+}
+
+/* Slate (neutro oscuro) */
+[data-theme="slate"] {
+  --color-bg: #0f172a;
+  --color-surface: #111827;
+  --color-text: #e5e7eb;
+  --color-text-muted: #94a3b8;
+  --color-border: #1f2937;
+  --color-sidebar: #0b1220;
+  --color-sidebar-active: #111827;
+  --color-primary: #38bdf8;
+  --color-primary-contrast: #0b1220;
+  --color-success-bg: #0b2e22;
+  --color-success-fg: #22c55e;
+  --color-success-border: #14532d;
+  --color-danger-bg: #2a0b0b;
+  --color-danger-fg: #f87171;
+  --color-danger-border: #7f1d1d;
+}
+
+/* Aplicación global */
+html, body { background-color: var(--color-bg); color: var(--color-text); }
+
+/* Mapeo de utilidades Tailwind comunes a tokens del tema */
+.bg-gray-100 { background-color: var(--color-bg) !important; }
+.bg-white { background-color: var(--color-surface) !important; }
+.border-gray-200 { border-color: var(--color-border) !important; }
+
+.text-gray-900, .text-gray-800, .text-gray-700 { color: var(--color-text) !important; }
+.text-gray-500, .text-gray-400, .text-gray-300 { color: var(--color-text-muted) !important; }
+
+.bg-gray-800, .bg-gray-900 { background-color: var(--color-sidebar) !important; }
+.hover\:bg-gray-700:hover { background-color: var(--color-sidebar-active) !important; }
+
+/* Primario (botones, acentos, avatares bg-blue-600) */
+.bg-blue-600 { background-color: var(--color-primary) !important; }
+.text-blue-600 { color: var(--color-primary) !important; }
+
+/* Alertas */
+.bg-green-50 { background-color: var(--color-success-bg) !important; }
+.border-green-200 { border-color: var(--color-success-border) !important; }
+.text-green-800, .text-green-600 { color: var(--color-success-fg) !important; }
+
+.bg-red-50 { background-color: var(--color-danger-bg) !important; }
+.border-red-200 { border-color: var(--color-danger-border) !important; }
+.text-red-800, .text-red-600 { color: var(--color-danger-fg) !important; }

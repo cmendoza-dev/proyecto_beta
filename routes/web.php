@@ -7,6 +7,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ParticipantController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,11 +27,16 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+        // Documentos
+    Route::get('/documents', [App\Http\Controllers\DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/download/{meeting}/{filename}', [App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
+
     // Administrator routes
     Route::middleware('role:Administrator')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('users', UserController::class);
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
     });
 
     // Secretary and Administrator routes
