@@ -1,8 +1,9 @@
 import Alpine from 'alpinejs';
+import Swal from 'sweetalert2';
 
 // Make Alpine available globally
 window.Alpine = Alpine;
-
+window.Swal = Swal;
 // Start Alpine
 Alpine.start();
 

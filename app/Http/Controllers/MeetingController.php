@@ -29,10 +29,11 @@ class MeetingController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'location' => ['required', 'string', 'max:255'],
+            'type_meeting' => ['required', 'string', 'max:255'],
             'date' => ['required', 'date', 'after_or_equal:today'],
             'opening_time' => ['required', 'date_format:H:i'],
             'closing_time' => ['required', 'date_format:H:i', 'after:opening_time'],
-            'location' => ['nullable', 'string', 'max:255'],
         ]);
 
         // Determinar el estado inicial según el botón presionado
@@ -41,6 +42,8 @@ class MeetingController extends Controller
         $meeting = Meeting::create([
             'title' => $validated['title'],
             'description' => $validated['description'],
+            'location' => $validated['location'],
+            'type_meeting' => $validated['type_meeting'],
             'date' => $validated['date'],
             'opening_time' => $validated['opening_time'],
             'closing_time' => $validated['closing_time'],
@@ -83,10 +86,11 @@ class MeetingController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'location' => ['required', 'string', 'max:255'],
+            'type_meeting' => ['required', 'string', 'max:255'],
             'date' => ['required', 'date'],
             'opening_time' => ['required', 'date_format:H:i'],
             'closing_time' => ['required', 'date_format:H:i', 'after:opening_time'],
-            'location' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'in:draft,open,closed'],
         ]);
 

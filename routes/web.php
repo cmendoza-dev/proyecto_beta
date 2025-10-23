@@ -7,7 +7,9 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ParticipantController;
-
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EmailDocumentsController;
+use App\Http\Controllers\DocumentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,9 +29,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-        // Documentos
-    Route::get('/documents', [App\Http\Controllers\DocumentController::class, 'index'])->name('documents.index');
-    Route::get('/documents/download/{meeting}/{filename}', [App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
+    // Documentos
+    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/download/{meeting}/{filename}', [DocumentController::class, 'download'])->name('documents.download');
 
     // Administrator routes
     Route::middleware('role:Administrator')->prefix('admin')->name('admin.')->group(function () {
@@ -38,6 +40,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
     });
+
+
+        Route::get('/meetings/{meeting}/email-data', [EmailDocumentsController::class, 'getEmailData']);
+        Route::post('/meetings/{meeting}/email-log', [EmailDocumentsController::class, 'logEmailSend']);
+        Route::get('/meetings/{meeting}/email-history', [EmailDocumentsController::class, 'getEmailHistory']);
+
 
     // Secretary and Administrator routes
     Route::middleware('role:Secretary|Administrator')->group(function () {
@@ -48,11 +56,26 @@ Route::middleware('auth')->group(function () {
         Route::post('/meetings/{meeting}/close', [MeetingController::class, 'close'])->name('meetings.close');
         Route::get('/meetings/{meeting}/report', [MeetingController::class, 'generateReport'])->name('meetings.report');
 
+        // Documentos
+        Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::post('/meetings/{meeting}/documents', [DocumentController::class, 'store'])->name('documents.store');
+        Route::post('/meetings/{meeting}/documents/upload', [DocumentController::class, 'upload'])->name('meetings.documents.upload');
+        Route::post('/meetings/{meeting}/documents/share-email', [DocumentController::class, 'shareByEmail'])->name('meetings.documents.share.email');
+        Route::get('/documents/download/{meeting}/{filename}', [DocumentController::class, 'download'])->name('documents.download');
+        Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+
         Route::resource('participants', ParticipantController::class);
         Route::get('/attendance/register', [AttendanceController::class, 'register'])->name('attendance.register');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
         Route::get('/attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
+
     });
+
+    // Rutas de perfil de usuario
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Default redirect after login
     Route::get('/home', fn () => redirect()->route('meetings.index'))->name('home');

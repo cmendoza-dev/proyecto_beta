@@ -22,14 +22,16 @@ class Attendance extends Model
         'attended_at' => 'datetime',
     ];
 
+    protected $table = 'attendances';
+
     public function meeting()
     {
-        return $this->belongsTo(Meeting::class);
+        return $this->belongsTo(\App\Models\Meeting::class);
     }
 
     public function participant()
     {
-        return $this->belongsTo(Participant::class);
+        return $this->belongsTo(\App\Models\Participant::class);
     }
 
     public function getRegisteredAtAttribute(): ?Carbon

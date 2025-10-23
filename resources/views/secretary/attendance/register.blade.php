@@ -1,3 +1,4 @@
+{{-- filepath: resources\views\secretary\attendance\register.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Registrar Asistencia')
@@ -25,7 +26,8 @@
                         <option value="">Seleccione una reunión</option>
                         @foreach($openMeetings as $meet)
                             <option value="{{ $meet->id }}" {{ request('meeting') == $meet->id ? 'selected' : '' }}>
-                                {{ $meet->title }} - {{ $meet->date->format('d/m/Y') }} ({{ $meet->opening_time }})
+                                {{ $meet->title }} - {{ $meet->date->format('d/m/Y') }} {{ \Carbon\Carbon::createFromFormat('H:i:s', $meet->opening_time)->format('h:i A') }}
+
                             </option>
                         @endforeach
                     </select>
@@ -39,7 +41,12 @@
                             </svg>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-green-800">{{ $selectedMeeting->title }}</p>
-                                <p class="text-sm text-green-700">{{ $selectedMeeting->date->format('d/m/Y') }} | {{ $selectedMeeting->opening_time }} - {{ $selectedMeeting->closing_time }}</p>
+                                <p class="text-sm text-green-700">
+                                    {{ $selectedMeeting->date->format('d/m/Y') }} |
+                                    {{ \Carbon\Carbon::createFromFormat('H:i:s', $selectedMeeting->opening_time)->format('h:i A') }}
+                                    -
+                                    {{ \Carbon\Carbon::createFromFormat('H:i:s', $selectedMeeting->closing_time)->format('h:i A') }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -48,85 +55,11 @@
 
             @if($selectedMeeting)
                 <!-- Scanner & Manual Input -->
-                <div
-                    class="p-6 bg-white rounded-lg shadow"
-                    x-data="{
-                        scannerActive: false,
-                        dni: '',
-                        scanning: false,
-                        lastScan: '',
-
-                        toggleScanner() {
-                            this.scannerActive = !this.scannerActive;
-                            if (this.scannerActive) {
-                                this.$nextTick(() => {
-                                    this.initScanner();
-                                });
-                            } else {
-                                this.stopScanner();
-                            }
-                        },
-
-                        initScanner() {
-                            if (typeof Quagga === 'undefined') {
-                                alert('El lector de códigos de barras no está disponible. Intente recargando la página.');
-                                return;
-                            }
-
-                            Quagga.init({
-                                inputStream: {
-                                    name: 'Live',
-                                    type: 'LiveStream',
-                                    target: document.querySelector('#scanner-container'),
-                                    constraints: {
-                                        width: 640,
-                                        height: 480,
-                                        facingMode: 'environment'
-                                    }
-                                },
-                                decoder: {
-                                    readers: ['code_128_reader', 'ean_reader', 'ean_8_reader', 'code_39_reader']
-                                }
-                            }, (err) => {
-                                if (err) {
-                                    console.error(err);
-                                    alert('Error al iniciar el escáner: ' + err);
-                                    this.scannerActive = false;
-                                    return;
-                                }
-                                Quagga.start();
-                            });
-
-                            Quagga.onDetected((result) => {
-                                if (this.scanning) return;
-
-                                const code = result.codeResult.code;
-                                if (code && code.length === 8 && /^\d+$/.test(code)) {
-                                    this.scanning = true;
-                                    this.dni = code;
-                                    this.lastScan = code;
-                                    this.stopScanner();
-
-                                    // Auto submit
-                                    this.$nextTick(() => {
-                                        document.getElementById('attendance-form').submit();
-                                    });
-                                }
-                            });
-                        },
-
-                        stopScanner() {
-                            if (typeof Quagga !== 'undefined') {
-                                Quagga.stop();
-                            }
-                            this.scannerActive = false;
-                            this.scanning = false;
-                        }
-                    }"
-                >
+                <div class="p-6 bg-white rounded-lg shadow" x-data="attendanceScanner()">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Método de Registro</h3>
                         <button
+                            type="button"
                             @click="toggleScanner()"
                             class="inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-lg transition"
                             :class="scannerActive ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
@@ -140,12 +73,23 @@
 
                     <!-- Scanner Container -->
                     <div x-show="scannerActive" x-cloak class="mb-6">
-                        <div id="scanner-container" class="relative overflow-hidden border-4 border-blue-500 rounded-lg" style="height: 300px;">
+                        <div id="scanner-container" class="relative overflow-hidden border-4 border-blue-500 rounded-lg transition-all" style="height: 400px;">
                             <div class="absolute inset-0 flex items-center justify-center bg-gray-900">
                                 <p class="text-white">Iniciando cámara...</p>
                             </div>
                         </div>
-                        <p class="mt-2 text-sm text-center text-gray-600">Coloca el código de barras del DNI frente a la cámara</p>
+                        <div class="flex items-center justify-center mt-3 space-x-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                                <p class="text-sm text-gray-600">Escáner activo</p>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                Detecciones: <span x-text="scanCount" class="font-bold text-blue-600">0</span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-center text-gray-600">
+                            📱 Coloca el código de barras del DNI frente a la cámara (parte posterior del DNI)
+                        </p>
                     </div>
 
                     <!-- Manual Input Form -->
@@ -162,7 +106,7 @@
                                     type="text"
                                     id="dni"
                                     name="dni"
-                                    x-model="dni"
+                                    x-model="dniValue"
                                     maxlength="8"
                                     pattern="\d{8}"
                                     required
@@ -173,12 +117,16 @@
                                 @error('dni')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                                <p class="mt-1 text-xs text-gray-500">O usa el escáner para capturar automáticamente</p>
                             </div>
 
                             <button
                                 type="submit"
-                                class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                                class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 transition"
                             >
+                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
                                 Registrar Asistencia
                             </button>
                         </div>
@@ -216,7 +164,7 @@
                                     <div class="ml-3 flex-1">
                                         <p class="text-sm font-medium text-gray-900">{{ $attendance->participant->first_name }} {{ $attendance->participant->last_name }}</p>
                                         <p class="text-xs text-gray-600">DNI: {{ $attendance->participant->dni }}</p>
-                                        <p class="text-xs text-gray-500">{{ $attendance->registered_at->format('H:i:s') }}</p>
+                                        <p class="text-xs text-gray-500">{{ $attendance->registered_at->timezone('America/Lima')->format('h:i A') }}</p>
                                     </div>
                                 </div>
                             @endforeach
@@ -245,11 +193,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div class="ml-3">
-                            <h3 class="text-sm font-medium text-blue-800">Métodos de Registro</h3>
+                            <h3 class="text-sm font-medium text-blue-800">Consejos para escanear</h3>
                             <ul class="mt-1 text-sm text-blue-700 space-y-1">
-                                <li>• <strong>Escáner:</strong> Usa la cámara para leer códigos de barras</li>
-                                <li>• <strong>Manual:</strong> Escribe el DNI directamente</li>
-                                <li>• <strong>Lector USB:</strong> Conecta un lector de códigos</li>
+                                <li>✓ Buena iluminación</li>
+                                <li>✓ Mantén el DNI estable</li>
+                                <li>✓ Código de barras visible y completo</li>
+                                <li>✓ Distancia: 10-20 cm</li>
+                                <li>✓ Usar parte posterior del DNI</li>
                             </ul>
                         </div>
                     </div>
@@ -261,4 +211,362 @@
 
 <!-- Include Quagga.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+
+<!-- Alpine.js Scanner Component - DEBE IR ANTES DE ALPINE.JS -->
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('attendanceScanner', () => ({
+            scannerActive: false,
+            dniValue: '',
+            scanning: false,
+            lastScan: '',
+            scanCount: 0,
+            detectedCodes: [],
+            stream: null,
+
+            init() {
+                this.$watch('scannerActive', value => {
+                    if (!value) {
+                        this.stopScanner();
+                    }
+                });
+
+                window.addEventListener('beforeunload', () => {
+                    if (this.scannerActive) {
+                        this.stopScanner();
+                    }
+                });
+            },
+
+            toggleScanner() {
+                this.scannerActive = !this.scannerActive;
+                if (this.scannerActive) {
+                    this.$nextTick(() => {
+                        this.initScanner();
+                    });
+                } else {
+                    this.stopScanner();
+                }
+            },
+
+            initScanner() {
+                console.log('Inicializando escáner...');
+
+                // Verificar si estamos en HTTPS o localhost
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Conexión no segura',
+                        html: 'La cámara solo funciona en:<br>• HTTPS (conexión segura)<br>• localhost<br><br>URL actual: ' + location.protocol + '//' + location.hostname,
+                        confirmButtonText: 'Entendido'
+                    });
+                    this.scannerActive = false;
+                    return;
+                }
+
+                if (typeof Quagga === 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El lector de códigos de barras no está disponible. Recarga la página e intenta nuevamente.'
+                    });
+                    this.scannerActive = false;
+                    return;
+                }
+
+                const container = document.querySelector('#scanner-container');
+                if (!container) {
+                    console.error('Contenedor del escáner no encontrado');
+                    this.scannerActive = false;
+                    return;
+                }
+
+                container.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-900"><p class="text-white">Iniciando cámara...</p></div>';
+
+                // Solicitar permisos de cámara primero
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                })
+                .then(stream => {
+                    console.log('Permisos de cámara concedidos');
+                    // Detener el stream temporal
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // Ahora iniciar Quagga
+                    this.startQuagga(container);
+                })
+                .catch(err => {
+                    console.error('Error al solicitar permisos de cámara:', err);
+                    let errorMsg = 'No se pudo acceder a la cámara.';
+
+                    if (err.name === 'NotAllowedError') {
+                        errorMsg = 'Permisos de cámara denegados. Por favor, permite el acceso a la cámara en la configuración de tu navegador.';
+                    } else if (err.name === 'NotFoundError') {
+                        errorMsg = 'No se encontró ninguna cámara en tu dispositivo.';
+                    } else if (err.name === 'NotReadableError') {
+                        errorMsg = 'La cámara está siendo usada por otra aplicación.';
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de cámara',
+                        html: errorMsg + '<br><br>Error: ' + err.message,
+                        confirmButtonText: 'Entendido'
+                    });
+
+                    this.scannerActive = false;
+                    container.innerHTML = '';
+                });
+            },
+
+            startQuagga(container) {
+
+                Quagga.init({
+                    inputStream: {
+                        name: 'Live',
+                        type: 'LiveStream',
+                        target: container,
+                        constraints: {
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
+                            facingMode: 'environment',
+                            aspectRatio: { min: 1, max: 2 }
+                        },
+                        area: {
+                            top: '25%',
+                            right: '15%',
+                            left: '15%',
+                            bottom: '25%'
+                        }
+                    },
+                    locator: {
+                        patchSize: 'medium',
+                        halfSample: true
+                    },
+                    numOfWorkers: navigator.hardwareConcurrency || 4,
+                    frequency: 10,
+                    decoder: {
+                        readers: [
+                            'code_39_reader',
+                            'code_128_reader',
+                            'ean_reader',
+                            'ean_8_reader',
+                            'codabar_reader'
+                        ],
+                        debug: {
+                            drawBoundingBox: true,
+                            showFrequency: false,
+                            drawScanline: true,
+                            showPattern: false
+                        }
+                    },
+                    locate: true
+                }, (err) => {
+                    if (err) {
+                        console.error('Error inicializando Quagga:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al iniciar escáner',
+                            html: err.message + '<br><br>Asegúrate de:<br>• Permitir acceso a la cámara<br>• Usar HTTPS o localhost<br>• Tener buena iluminación',
+                            confirmButtonText: 'Entendido'
+                        });
+                        this.scannerActive = false;
+                        return;
+                    }
+
+                    console.log('Quagga iniciado correctamente');
+                    Quagga.start();
+
+                    this.stream = Quagga.CameraAccess.getActiveStreamLabel();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Escáner activo',
+                        text: 'Coloca el código de barras del DNI frente a la cámara',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                });
+
+                Quagga.onProcessed((result) => {
+                    const drawingCtx = Quagga.canvas.ctx.overlay;
+                    const drawingCanvas = Quagga.canvas.dom.overlay;
+
+                    if (result) {
+                        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+                        if (result.boxes) {
+                            result.boxes.filter(box => box !== result.box).forEach(box => {
+                                Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {
+                                    color: 'rgba(0, 255, 0, 0.5)',
+                                    lineWidth: 2
+                                });
+                            });
+                        }
+
+                        if (result.box) {
+                            Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {
+                                color: '#00F',
+                                lineWidth: 3
+                            });
+                        }
+
+                        if (result.codeResult && result.codeResult.code) {
+                            Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {
+                                color: 'red',
+                                lineWidth: 3
+                            });
+                        }
+                    }
+                });
+
+                Quagga.onDetected((result) => {
+                    if (this.scanning) return;
+
+                    const code = result.codeResult.code;
+                    console.log('Código detectado:', code, 'Formato:', result.codeResult.format);
+
+                    const cleanCode = code.replace(/[^0-9]/g, '');
+
+                    if (cleanCode.length === 7 || cleanCode.length === 8) {
+                        this.detectedCodes.push(cleanCode);
+                        this.scanCount++;
+
+                        console.log('Código válido agregado:', cleanCode, 'Total detectados:', this.detectedCodes.length);
+
+                        if (this.detectedCodes.length >= 2) {
+                            const lastTwo = this.detectedCodes.slice(-2);
+                            if (lastTwo[0] === lastTwo[1]) {
+                                this.processCode(lastTwo[0]);
+                            }
+                        }
+                    } else {
+                        console.log('Código ignorado (longitud incorrecta):', cleanCode);
+                    }
+
+                    if (this.detectedCodes.length > 10) {
+                        this.detectedCodes = this.detectedCodes.slice(-5);
+                    }
+                });
+            },
+
+            processCode(code) {
+                if (this.scanning) return;
+
+                this.scanning = true;
+                this.dniValue = code.length === 7 ? '0' + code : code;
+                this.lastScan = this.dniValue;
+
+                console.log('DNI procesado:', this.dniValue);
+
+                const container = document.querySelector('#scanner-container');
+                if (container) {
+                    container.style.borderColor = '#10b981';
+                    container.style.borderWidth = '6px';
+                }
+
+                this.playBeep();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'DNI Escaneado',
+                    html: '<strong style="font-size: 24px;">DNI: ' + this.dniValue + '</strong><br><br>Registrando asistencia...',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                this.stopScanner();
+
+                setTimeout(() => {
+                    document.getElementById('attendance-form').submit();
+                }, 2000);
+            },
+
+            playBeep() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (error) {
+                    console.log('No se pudo reproducir el sonido:', error);
+                }
+            },
+
+            stopScanner() {
+                console.log('Deteniendo escáner...');
+
+                try {
+                    if (typeof Quagga !== 'undefined') {
+                        Quagga.stop();
+                        Quagga.offDetected();
+                        Quagga.offProcessed();
+                    }
+                } catch (error) {
+                    console.error('Error deteniendo Quagga:', error);
+                }
+
+                this.scannerActive = false;
+                this.scanning = false;
+                this.detectedCodes = [];
+                this.scanCount = 0;
+
+                const container = document.querySelector('#scanner-container');
+                if (container) {
+                    container.style.borderColor = '#3b82f6';
+                    container.style.borderWidth = '4px';
+                    container.innerHTML = '';
+                }
+            }
+        }));
+    });
+</script>
+
+@push('scripts')
+<script>
+    // Mostrar alertas de sesión
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: '{{ session('success') }}',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '{{ session('error') }}',
+            confirmButtonColor: '#dc2626'
+        });
+    @endif
+
+    @if($errors->any())
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de validación',
+            html: '@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach',
+            confirmButtonColor: '#dc2626'
+        });
+    @endif
+</script>
+@endpush
 @endsection

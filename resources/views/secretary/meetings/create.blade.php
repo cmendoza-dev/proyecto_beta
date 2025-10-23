@@ -76,20 +76,20 @@
                         </div>
                         <!-- Tipo de Reunión -->
                         <div>
-                            <label for="meeting_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="type_meeting" class="block text-sm font-medium text-gray-700 mb-2">
                                 Tipo de Reunión <span class="text-red-500">*</span>
                             </label>
-                            <select id="meeting_type" name="meeting_type" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('meeting_type') border-red-500 @enderror">
+                            <select id="type_meeting" name="type_meeting" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('type_meeting') border-red-500 @enderror">
                                 <option value="">Seleccione un tipo de reunión</option>
                                 <option value="presencial"
-                                    {{ old('meeting_type', $meeting->meeting_type ?? '') === 'presencial' ? 'selected' : '' }}>
+                                    {{ old('type_meeting', $meeting->type_meeting ?? '') === 'presencial' ? 'selected' : '' }}>
                                     Presencial</option>
                                 <option value="virtual"
-                                    {{ old('meeting_type', $meeting->meeting_type ?? '') === 'virtual' ? 'selected' : '' }}>
+                                    {{ old('type_meeting', $meeting->type_meeting ?? '') === 'virtual' ? 'selected' : '' }}>
                                     Virtual</option>
                             </select>
-                            @error('meeting_type')
+                            @error('type_meeting')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>

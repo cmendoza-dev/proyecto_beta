@@ -29,6 +29,16 @@ class Participant extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    public function meetings()
+    {
+        return $this->belongsToMany(
+            \App\Models\Meeting::class,
+            'attendances',
+            'participant_id',
+            'meeting_id'
+        )->withPivot(['attended_at', 'status', 'notes', 'created_at', 'updated_at']);
+    }
+
     // Primer nombre desde 'name' (si solo guardas el nombre completo en 'name')
     public function getFirstNameAttribute(): string
     {

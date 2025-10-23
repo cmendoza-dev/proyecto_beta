@@ -12,10 +12,11 @@ class Meeting extends Model
     protected $fillable = [
         'title',
         'description',
+        'location',
+        'type_meeting',
         'date',
         'opening_time', // <- agregar
         'closing_time', // <- agregar
-        'location',
         'status',
         'created_by',
     ];
@@ -34,7 +35,7 @@ class Meeting extends Model
 
     public function attendances()
     {
-        return $this->hasMany(Attendance::class);
+        return $this->hasMany(\App\Models\Attendance::class);
     }
 
     public function isOpen()
@@ -75,7 +76,7 @@ class Meeting extends Model
             'attendances',
             'meeting_id',
             'participant_id'
-        );
+        )->withPivot(['attended_at', 'status', 'notes', 'created_at', 'updated_at']);
     }
 
     // Opcional: incluir en arrays/JSON automáticamente
@@ -108,4 +109,10 @@ class Meeting extends Model
                 return 'bg-yellow-100 text-yellow-800';
         }
     }
+
+    public function documents()
+    {
+        return $this->hasMany(\App\Models\Document::class);
+    }
+
 }

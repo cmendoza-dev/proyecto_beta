@@ -134,9 +134,8 @@
 
                             const formData = new FormData();
                             formData.append('document', fileData.file);
-                            {{-- {{ route(\'meetings.documents.upload\', $meeting) }} --}}
                             try {
-                                const response = await fetch('', {
+                                const response = await fetch('{{ route('meetings.documents.upload', $meeting) }}', {
                                     method: 'POST',
                                     headers: {
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -146,15 +145,16 @@
 
                                 const data = await response.json();
 
-                                if (response.ok && data.file_url) {
+                                if (response.ok && data.success) {
                                     fileData.uploaded = true;
                                     fileData.url = data.file_url;
                                     fileData.uploading = false;
                                 } else {
-                                    fileData.error = 'Error al subir el archivo';
+                                    fileData.error = data.message || 'Error al subir el archivo';
                                     fileData.uploading = false;
                                 }
                             } catch (error) {
+                                console.error('Error:', error);
                                 fileData.error = 'Error de conexión';
                                 fileData.uploading = false;
                             }
@@ -463,8 +463,7 @@
                                                     </div>
 
                                                     {{-- <!-- Email Form --> --}}
-                                                    {{-- {{ route('meetings.documents.share.email', $meeting) }} --}}
-                                                    <form method="POST" action="" class="space-y-3 mb-4">
+                                                    <form method="POST" action="{{ route('meetings.documents.share.email', $meeting) }}" class="space-y-3 mb-4">
                                                         @csrf
                                                         <template
                                                             x-for="(fileData, index) in files.filter(f => f.uploaded)"
@@ -485,7 +484,6 @@
                                                                         <path stroke-linecap="round"
                                                                             stroke-linejoin="round" stroke-width="2"
                                                                             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                                    </svg>
                                                                 </div>
                                                                 <input type="text" name="emails"
                                                                     placeholder="correo1@ejemplo.com, correo2@ejemplo.com"
@@ -718,6 +716,69 @@
                 </div>
             @endif
         </div>
+
+        @if($meeting->is_closed)
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Documentos de la Reunión</h5>
+                </div>
+                <div class="card-body">
+                    @if(auth()->user()->role === 'Secretary' || auth()->user()->role === 'Administrator')
+                        <form action="{{ route('documents.store', $meeting) }}" method="POST" enctype="multipart/form-data" class="mb-4">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label">Subir Documentos (PDF, DOC, DOCX, XLS, XLSX, JPG, PNG)</label>
+                                <input type="file" name="documents[]" class="form-control" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" required>
+                                <small class="text-muted">Puedes seleccionar múltiples archivos. Máximo 10MB por archivo.</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Subir Documentos</button>
+                        </form>
+                    @endif
+
+                    @if($meeting->documents->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tamaño</th>
+                                        <th>Subido por</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($meeting->documents as $document)
+                                        <tr>
+                                            <td>{{ $document->original_name }}</td>
+                                            <td>{{ number_format($document->file_size / 1024, 2) }} KB</td>
+                                            <td>{{ $document->uploader->name }}</td>
+                                            <td>{{ $document->created_at->format('d/m/Y H:i') }}</td>
+                                            <td>
+                                                <a href="{{ route('documents.download', [$meeting, basename($document->file_path)]) }}" class="btn btn-sm btn-success">
+                                                    Descargar
+                                                </a>
+                                                @if(auth()->user()->role === 'Secretary' || auth()->user()->role === 'Administrator')
+                                                    <form action="{{ route('documents.destroy', $document) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este documento?')">
+                                                            Eliminar
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="text-muted">No hay documentos subidos.</p>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 
 @endsection

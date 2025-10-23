@@ -63,26 +63,32 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . $id],
+            'email' => ['required', 'email', 'unique:users,email,' . $user->id],
+            'dni' => ['required', 'string', 'size:8', 'unique:users,dni,' . $user->id],
+            'phone' => ['nullable', 'string', 'size:9'],
+            'role' => ['required', 'in:Administrator,Secretary,Participant'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:Administrator,Secretary'],
+            'is_active' => ['nullable', 'boolean']
         ]);
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-        ]);
+        // Actualizar datos básicos
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->dni = $validated['dni'];
+        $user->phone = $validated['phone'];
+        $user->role = $validated['role'];
+        $user->is_active = $request->has('is_active');
 
-        if ($request->filled('password')) {
-            $user->update(['password' => bcrypt($validated['password'])]);
+        // Si se proporciona una nueva contraseña, actualizarla
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
         }
+
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario actualizado correctamente');

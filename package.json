@@ -19,6 +19,7 @@
         "alpinejs": "^3.15.0",
         "filepond": "^4.32.9",
         "filepond-plugin-image-preview": "^4.6.12",
-        "quagga": "^0.12.1"
+        "quagga": "^0.12.1",
+        "sweetalert2": "^11.26.3"
     }
 }
