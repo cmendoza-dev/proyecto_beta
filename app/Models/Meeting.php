@@ -18,6 +18,7 @@ class Meeting extends Model
         'opening_time', // <- agregar
         'closing_time', // <- agregar
         'status',
+        'attachments',
         'created_by',
     ];
 

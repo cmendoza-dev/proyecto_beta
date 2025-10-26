@@ -21,11 +21,19 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+
+            if (!$user->is_active) {
+            Auth::logout();
+            return back()->withErrors([
+                'email' => 'Usuario inhabilitado. Contacte al administrador.',
+            ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
-            $user = Auth::user();
             if ($user->role === 'Administrator') {
-                return redirect()->intended(route('admin.dashboard'));
+            return redirect()->intended(route('admin.dashboard'));
             }
             return redirect()->intended(route('meetings.index'));
         }

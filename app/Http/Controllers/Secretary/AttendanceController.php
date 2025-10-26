@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Secretary;
 
+use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Meeting;
 use App\Models\Participant;
@@ -25,7 +26,7 @@ class AttendanceController extends Controller
             $recentAttendances = Attendance::with('participant')
                 ->where('meeting_id', $selectedMeeting->id)
                 ->orderByDesc('attended_at')
-                ->limit(10)
+                ->limit(3)
                 ->get();
 
             $totalAttendances = Attendance::where('meeting_id', $selectedMeeting->id)->count();
@@ -59,13 +60,4 @@ class AttendanceController extends Controller
         return back()->with('success', 'Asistencia registrada.');
     }
 
-    public function list()
-    {
-        $meetings = Meeting::orderByDesc('date')->get();
-        $attendances = Attendance::with(['participant', 'meeting'])
-            ->orderByDesc('attended_at')
-            ->paginate(15);
-
-        return view('secretary.attendance.list', compact('meetings', 'attendances'));
-    }
 }

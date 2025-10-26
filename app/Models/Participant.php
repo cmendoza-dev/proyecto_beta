@@ -24,6 +24,7 @@ class Participant extends Model
         'is_active' => 'boolean',
     ];
 
+    // Relaciones
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
@@ -39,23 +40,61 @@ class Participant extends Model
         )->withPivot(['attended_at', 'status', 'notes', 'created_at', 'updated_at']);
     }
 
-    // Primer nombre desde 'name' (si solo guardas el nombre completo en 'name')
-    public function getFirstNameAttribute(): string
+    // Accessor conveniente
+    public function getFullNameAttribute(): string
     {
-        $name = (string) ($this->attributes['name'] ?? '');
-        $parts = preg_split('/\s+/', trim($name));
-        return $parts[0] ?? '';
+        return trim(($this->attributes['name'] ?? '') . ' ' . ($this->attributes['last_name'] ?? ''));
     }
 
- // Usar la columna 'last_name' si existe; si no, intentar derivarlo desde 'name'
-    public function getLastNameAttribute($value): string
+    // Mutators de normalización
+    public function setNameAttribute($value): void
     {
-        if (!is_null($value) && $value !== '') {
-            return (string) $value;
-        }
+        $this->attributes['name'] = $this->cleanName($value);
+    }
 
-        $name = (string) ($this->attributes['name'] ?? '');
-        $parts = preg_split('/\s+/', trim($name));
-        return count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
+    public function setLastNameAttribute($value): void
+    {
+        $this->attributes['last_name'] = $this->cleanName($value);
+    }
+
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = strtolower(trim((string) $value));
+    }
+
+    public function setDniAttribute($value): void
+    {
+        $digits = preg_replace('/\D+/', '', (string) $value);
+        $this->attributes['dni'] = substr($digits, 0, 8); // ajusta si tu DNI es 8 u 12
+    }
+
+    public function setPhoneAttribute($value): void
+    {
+        $digits = preg_replace('/\D+/', '', (string) $value);
+        $this->attributes['phone'] = substr($digits, 0, 9); // ajusta si tu teléfono es 9 o más dígitos
+    }
+
+    public function setOrganizationAttribute($value): void
+    {
+        $this->attributes['organization'] = $this->cleanText($value);
+    }
+
+    public function setPositionAttribute($value): void
+    {
+        $this->attributes['position'] = $this->cleanText($value);
+    }
+
+    private function cleanName(?string $value): string
+    {
+        $v = trim((string) $value);
+        // Normalización ligera sin forzar mayúsculas por acentos
+        $v = preg_replace('/\s+/', ' ', $v);
+        return $v;
+    }
+
+    private function cleanText(?string $value): string
+    {
+        $v = trim((string) $value);
+        return preg_replace('/\s+/', ' ', $v);
     }
 }

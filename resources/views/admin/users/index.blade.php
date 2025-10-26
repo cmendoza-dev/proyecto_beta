@@ -83,10 +83,10 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex items-center justify-center w-10 h-10 text-white bg-blue-600 rounded-full">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    {{ strtoupper(substr($user->first_name, 0, 1)) }}
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $user->first_name }} {{ $user->last_name }}</div>
                                 </div>
                             </div>
                         </td>
@@ -96,7 +96,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex px-2 text-xs font-semibold leading-5 rounded-full
                                 {{ $user->hasRole('Administrator') ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}">
-                             {{ $user->role ?? 'Sin rol' }}
+                             {{ $user->role_label ?? 'Sin rol' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">

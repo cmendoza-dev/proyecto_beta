@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Meeting;
 use Illuminate\Http\Request;
@@ -65,6 +66,13 @@ class DocumentController extends Controller
         }
 
         return back()->with('error', 'No se seleccionaron archivos.');
+    }
+
+    public function show(Meeting $meeting)
+    {
+        $meeting->load(['documents.uploader', 'participants']);
+
+        return view('documents.show', compact('meeting'));
     }
 
     /**

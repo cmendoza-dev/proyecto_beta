@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -14,9 +14,10 @@ class UserController extends Controller
 
         // Filtro por búsqueda
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%'.$request->search.'%')
+                    ->orWhere('last_name', 'like', '%'.$request->search.'%')
+                    ->orWhere('email', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -40,17 +41,21 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:Administrator,Secretary'],
+            'is_active' => ['required', 'boolean'],
         ]);
 
         User::create([
-            'name' => $validated['name'],
+            'first_name' => strtoupper($validated['first_name']),
+            'last_name' => strtoupper($validated['last_name']),
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
             'role' => $validated['role'],
+            'is_active' => $validated['is_active'],
         ]);
 
         return redirect()->route('admin.users.index')
@@ -60,31 +65,30 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('admin.users.edit', compact('user'));
+
+        return view('admin.users.create', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . $user->id],
-            'dni' => ['required', 'string', 'size:8', 'unique:users,dni,' . $user->id],
-            'phone' => ['nullable', 'string', 'size:9'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email,'.$user->id],
             'role' => ['required', 'in:Administrator,Secretary,Participant'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'is_active' => ['nullable', 'boolean']
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         // Actualizar datos básicos
-        $user->name = $validated['name'];
+        $user->first_name = strtoupper($validated['first_name']);
+        $user->last_name = strtoupper($validated['last_name']);
         $user->email = $validated['email'];
-        $user->dni = $validated['dni'];
-        $user->phone = $validated['phone'];
         $user->role = $validated['role'];
         $user->is_active = $request->has('is_active');
 
         // Si se proporciona una nueva contraseña, actualizarla
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = bcrypt($validated['password']);
         }
 
@@ -104,7 +108,9 @@ class UserController extends Controller
                 ->with('error', 'No puedes eliminar tu propio usuario');
         }
 
-        $user->delete();
+        // $user->delete();
+        $user->is_active = false;
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario eliminado correctamente');
@@ -113,6 +119,7 @@ class UserController extends Controller
     public function show($id)
     {
         $user = User::findOrFail($id);
+
         return view('admin.users.show', compact('user'));
     }
 }

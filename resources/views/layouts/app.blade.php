@@ -217,6 +217,17 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                             </svg>
                             <span x-show="!sidebarCollapsed">Reportes</span>
                         </a>
+
+                        <a href="{{ route('admin.documents.index') }}"
+                            class="nav-item flex items-center px-3 py-3 mt-1 text-sm font-medium rounded-lg group {{ request()->routeIs('admin.documents.*') ? 'active text-white bg-gradient-to-r from-blue-600 to-blue-500 shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span x-show="!sidebarCollapsed">Documentos</span>
+                        </a>
+
                     </div>
                 @endrole
 
@@ -254,32 +265,9 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                         <span x-show="!sidebarCollapsed">Registrar Asistencia</span>
                     </a>
 
-                    <a href="{{ route('documents.index') }}"
-                        class="nav-item flex items-center px-3 py-3 mt-1 text-sm font-medium rounded-lg group {{ request()->routeIs('documents.*') ? 'active text-white bg-gradient-to-r from-blue-600 to-blue-500 shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span x-show="!sidebarCollapsed">Documentos</span>
-                    </a>
+
                 </div>
             </nav>
-
-            <!-- User Card al final -->
-            <div x-show="!sidebarCollapsed" x-transition
-                class="p-4 m-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg">
-                <div class="flex items-center space-x-3">
-                    <div
-                        class="flex items-center justify-center w-10 h-10 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full font-semibold text-sm shadow-md">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                        <p class="text-xs text-gray-500 truncate">{{ auth()->user()->role ?? 'Usuario' }}</p>
-                    </div>
-                </div>
-            </div>
         </aside>
 
         <!-- Contenido Principal -->
@@ -367,7 +355,7 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                             <div x-show="open" @click.away="open = false" x-cloak x-transition
                                 class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                                 <div class="px-4 py-3 border-b border-gray-100">
-                                    <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</p>
                                     <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
                                 </div>
 
@@ -407,6 +395,21 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                                             Cerrar Sesión
                                         </button>
                                     </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- User Card al final -->
+                        <div x-show="!sidebarCollapsed" x-transition
+                            class=" m-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-full">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="flex items-center justify-center w-10 h-10 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full font-semibold text-sm shadow-md">
+                                    {{ strtoupper(substr(auth()->user()->first_name, 0, 1)) }}
+                                </div>
+                                <div class="pr-4">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -502,8 +505,7 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                                         errores:</h3>
                                     <button @click="show = false"
                                         class="ml-auto text-red-600 hover:text-red-800 transition-colors">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12" />
                                         </svg>

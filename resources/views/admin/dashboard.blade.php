@@ -37,7 +37,7 @@
                         </div>
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('participants.index') }}"
+                        <a href="{{ route('admin.users.index') }}"
                             class="text-sm font-medium text-green-600 hover:text-green-800">
                             Ver todos →
                         </a>

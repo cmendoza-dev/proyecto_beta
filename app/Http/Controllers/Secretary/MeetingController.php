@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Secretary;
 
+use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class MeetingController extends Controller
             ->withCount('attendances')
             ->orderByDesc('date')
             ->orderByDesc('created_at')
-            ->paginate(10);
+            ->paginate(12); // 12 reuniones por página
 
         return view('secretary.meetings.index', compact('meetings'));
     }
@@ -61,13 +62,11 @@ class MeetingController extends Controller
 
     public function show(Meeting $meeting)
     {
-        // $meeting = Meeting::findOrFail($id);
-
         // Cargar las asistencias de la reunión
         $attendances = $meeting->attendances()
             ->with('participant')
             ->orderBy('created_at', 'asc')
-            ->get();
+            ->paginate(10); // 10 registros por página
 
         return view('secretary.meetings.show', compact('meeting', 'attendances'));
     }
@@ -156,5 +155,4 @@ class MeetingController extends Controller
         // Si prefieres abrir en el navegador:
         return $pdf->stream($filename);
     }
-
 }

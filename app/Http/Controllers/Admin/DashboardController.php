@@ -18,10 +18,10 @@ class DashboardController extends Controller
         // Solo reuniones cerradas, más recientes
         $recentMeetings = Meeting::where('status', 'closed')
             ->withCount('attendances')
-            ->with(['participants:id,name,last_name'])
+            ->with(['participants:id,first_name,last_name'])
             ->orderByDesc('date')
             ->orderByDesc('created_at')
-            ->limit(5)
+            ->limit(3)
             ->get();
 
         return view('admin.dashboard', compact(

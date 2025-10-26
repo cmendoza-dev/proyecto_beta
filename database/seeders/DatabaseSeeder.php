@@ -10,23 +10,28 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
-            [
-                'name' => 'Administrador',
-                'password' => Hash::make('password'),
-                'role' => 'Administrator',
-            ]
-        );
+        $this->call([
+            ParticipantSeeder::class,
+            // MeetingSeeder::class,
+            // AttendanceSeeder::class,
+        ]);
+        // User::firstOrCreate(
+        //     ['email' => 'admin@admin.com'],
+        //     [
+        //         'name' => 'Administrador',
+        //         'password' => Hash::make('password'),
+        //         'role' => 'Administrator',
+        //     ]
+        // );
 
-        User::firstOrCreate(
-            ['email' => 'secretary@admin.com'],
-            [
-                'name' => 'Secretario',
-                'password' => Hash::make('password'),
-                'role' => 'Secretary',
-            ]
-        );
+        // User::firstOrCreate(
+        //     ['email' => 'secretary@admin.com'],
+        //     [
+        //         'name' => 'Secretario',
+        //         'password' => Hash::make('password'),
+        //         'role' => 'Secretary',
+        //     ]
+        // );
     }
 }
 

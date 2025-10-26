@@ -19,10 +19,12 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
-        'role', // usamos esta columna
+        'role',
+        'is_active',
     ];
 
     /**
@@ -57,5 +59,23 @@ class User extends Authenticatable
     public function hasAnyRole(array $roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    // Opcional: incluir en arrays/JSON automáticamente
+    protected $appends = ['role_label'];
+
+    // Estado en español
+    public function getRoleLabelAttribute(): string
+    {
+        switch ($this->role) {
+            case 'Administrator':
+                return 'Administrador';
+            case 'Secretary':
+                return 'Secretario';
+            case 'Participant':
+                return 'Participante';
+            default:
+                return (string) $this->role;
+        }
     }
 }

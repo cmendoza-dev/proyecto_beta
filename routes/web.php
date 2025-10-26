@@ -1,15 +1,16 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Secretary\AttendanceController;
+use App\Http\Controllers\Secretary\MeetingController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmailDocumentsController;
-use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\ReniecController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,8 +30,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    // Documentos
-    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/download/{meeting}/{filename}', [DocumentController::class, 'download'])->name('documents.download');
 
     // Administrator routes
@@ -38,14 +37,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('users', UserController::class);
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        // Documentos
+        Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
 
     });
 
-
-        Route::get('/meetings/{meeting}/email-data', [EmailDocumentsController::class, 'getEmailData']);
-        Route::post('/meetings/{meeting}/email-log', [EmailDocumentsController::class, 'logEmailSend']);
-        Route::get('/meetings/{meeting}/email-history', [EmailDocumentsController::class, 'getEmailHistory']);
-
+    Route::get('/meetings/{meeting}/email-data', [EmailDocumentsController::class, 'getEmailData']);
+    Route::post('/meetings/{meeting}/email-log', [EmailDocumentsController::class, 'logEmailSend']);
+    Route::get('/meetings/{meeting}/email-history', [EmailDocumentsController::class, 'getEmailHistory']);
 
     // Secretary and Administrator routes
     Route::middleware('role:Secretary|Administrator')->group(function () {
@@ -57,7 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/meetings/{meeting}/report', [MeetingController::class, 'generateReport'])->name('meetings.report');
 
         // Documentos
-        Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('/meetings/{meeting}/documents', [DocumentController::class, 'show'])->name('documents.meeting');
         Route::post('/meetings/{meeting}/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::post('/meetings/{meeting}/documents/upload', [DocumentController::class, 'upload'])->name('meetings.documents.upload');
         Route::post('/meetings/{meeting}/documents/share-email', [DocumentController::class, 'shareByEmail'])->name('meetings.documents.share.email');
@@ -81,13 +80,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/home', fn () => redirect()->route('meetings.index'))->name('home');
 
     // Search route for RENIEC
-    Route::post('/api/reniec/search', [App\Http\Controllers\ReniecController::class, 'searchByDni'])
+    Route::post('/api/reniec/search', [ReniecController::class, 'searchByDni'])
         ->middleware('auth')
         ->name('reniec.search');
 
     // Report generation route (Admin)
     Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/reports', [App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     });
 
 });
