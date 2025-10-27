@@ -28,11 +28,12 @@ class EmailDocumentsController extends Controller
 
             // Participantes (via attendances pivot)
             $participantes = $meeting->participants->map(function ($participant) {
-                $fullName = trim(($participant->name ?? '') . ' ' . ($participant->last_name ?? ''));
+                $fullName = trim(($participant->first_name ?? '') . ' ' . ($participant->last_name ?? ''));
                 return [
                     'id' => $participant->id,
-                    'name' => $fullName !== '' ? $fullName : ($participant->name ?? ''),
+                    'name' => $fullName !== '' ? $fullName : ($participant->first_name ?? ''),
                     'email' => $participant->email,
+                    'phone' => $participant->phone,
                 ];
             })->toArray();
 

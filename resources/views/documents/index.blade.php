@@ -2,14 +2,6 @@
 
 @section('title', 'Documentos')
 
-@push('head')
-    <!-- EmailJS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>
-        emailjs.init('mpe9oN39k_jL28HiD');
-    </script>
-@endpush
-
 @section('content')
     <div class="space-y-6">
         <div class="">
@@ -79,9 +71,8 @@
 
                 @if ($meeting->documents->count() > 0)
                     <!-- Botón de Envío Masivo -->
-                    @if (
-                        $meeting->participants->count() > 0 &&
-                            (auth()->user()->role === 'Secretary' || auth()->user()->role === 'Administrator'))
+                    <!-- Añadir el botón de compartir por WhatsApp -->
+                    @if ($meeting->participants->count() > 0)
                         <div
                             class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
                             <div class="flex items-center">
@@ -94,14 +85,24 @@
                                     <strong>{{ $meeting->participants->count() }}</strong> participante(s) registrado(s)
                                 </span>
                             </div>
-                            <button onclick="prepararEnvioMasivo({{ $meeting->id }})"
-                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                </svg>
-                                Enviar Documentos por Email
-                            </button>
+                            <div class="">
+                                <button onclick="prepararEnvioMasivo({{ $meeting->id }})"
+                                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    Correo electrónico
+                                </button>
+                                <button onclick="compartirPorWhatsApp({{ $meeting->id }})"
+                                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                    </svg>
+                                    WhatsApp
+                                </button>
+                            </div>
                         </div>
                     @endif
 
@@ -205,282 +206,7 @@
 @endsection
 
 @push('scripts')
-    <script>
-        // ============================================
-        // CONFIGURACIÓN DE EMAILJS
-        // ============================================
-        const EMAILJS_CONFIG = {
-            serviceId: 'service_39ah582', // Cambiar por tu Service ID
-            templateId: 'template_u6cp1np', // Cambiar por tu Template ID
-            publicKey: 'mpe9oN39k_jL28HiD' // Ya inicializado en el head
-        };
-
-        // ============================================
-        // FUNCIÓN PRINCIPAL PARA ENVÍO MASIVO
-        // ============================================
-        async function enviarDocumentosMasivo(meetingId, participantes, documentos) {
-            const resultados = {
-                exitosos: [],
-                fallidos: []
-            };
-
-            mostrarLoading(true);
-
-            for (const participante of participantes) {
-                try {
-                    await enviarEmailParticipante(meetingId, participante, documentos);
-                    resultados.exitosos.push(participante.email);
-                    await delay(500); // Pausa para evitar rate limiting
-                } catch (error) {
-                    console.error(`Error enviando a ${participante.email}:`, error);
-                    resultados.fallidos.push({
-                        email: participante.email,
-                        error: error.message
-                    });
-                }
-            }
-
-            // Registrar resultados en el servidor
-            await registrarEnvios(meetingId, resultados);
-
-            mostrarLoading(false);
-            mostrarResultados(resultados);
-
-            return resultados;
-        }
-
-        // ============================================
-        // ENVÍO INDIVIDUAL CON EMAILJS
-        // ============================================
-        async function enviarEmailParticipante(meetingId, participante, documentos) {
-            const templateParams = {
-                to_email: participante.email,
-                to_name: participante.name,
-                meeting_title: documentos.meeting.title,
-                meeting_date: formatearFecha(documentos.meeting.date),
-                meeting_location: documentos.meeting.location || 'Sin ubicación',
-                meeting_description: documentos.meeting.description || '',
-                documents_list: generarListaDocumentos(documentos.files),
-                documents_count: documentos.files.length,
-                download_links: generarEnlacesDescarga(meetingId, documentos.files),
-                sent_by: documentos.sender.name,
-                sent_date: new Date().toLocaleDateString('es-ES'),
-                system_url: window.location.origin,
-                meeting_url: `${window.location.origin}/meetings/${meetingId}`
-            };
-
-            return emailjs.send(
-                EMAILJS_CONFIG.serviceId,
-                EMAILJS_CONFIG.templateId,
-                templateParams
-            );
-        }
-
-        // ============================================
-        // FUNCIONES AUXILIARES
-        // ============================================
-        function generarListaDocumentos(files) {
-            return files.map((doc, index) => {
-                const extension = doc.original_name.split('.').pop().toUpperCase();
-                const size = (doc.file_size / 1024).toFixed(2);
-                return `${index + 1}. ${doc.original_name} (${extension} - ${size} KB)`;
-            }).join('\n');
-        }
-
-        function generarEnlacesDescarga(meetingId, files) {
-            const baseUrl = window.location.origin;
-            return files.map((doc, index) => {
-                const filename = doc.file_path.split('/').pop();
-                const url = `${baseUrl}/documents/download/${meetingId}/${filename}`;
-                return `${index + 1}. ${doc.original_name}:\n   ${url}`;
-            }).join('\n\n');
-        }
-
-        function formatearFecha(fecha) {
-            return new Date(fecha).toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
-            });
-        }
-
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // ============================================
-        // UI - MODAL Y FEEDBACK
-        // ============================================
-        function mostrarLoading(show) {
-            const existingModal = document.getElementById('email-loading-modal');
-
-            if (show) {
-                const modal = `
-            <div id="email-loading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg p-8 max-w-md">
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-                        <h3 class="mt-4 text-lg font-semibold">Enviando correos...</h3>
-                        <p class="mt-2 text-sm text-gray-600">Por favor espera, esto puede tomar unos momentos</p>
-                    </div>
-                </div>
-            </div>
-        `;
-                document.body.insertAdjacentHTML('beforeend', modal);
-            } else if (existingModal) {
-                existingModal.remove();
-            }
-        }
-
-        function mostrarResultados(resultados) {
-            const total = resultados.exitosos.length + resultados.fallidos.length;
-            const exitosos = resultados.exitosos.length;
-
-            let mensaje = `
-        <div class="bg-white rounded-lg p-6 max-w-2xl max-h-96 overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4">Resultado del Envío</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                    <span class="text-green-800 font-medium">Enviados correctamente</span>
-                    <span class="text-2xl font-bold text-green-600">${exitosos}/${total}</span>
-                </div>
-    `;
-
-            if (resultados.fallidos.length > 0) {
-                mensaje += `
-            <div class="p-4 bg-red-50 rounded-lg">
-                <h4 class="font-semibold text-red-800 mb-2">Fallidos (${resultados.fallidos.length}):</h4>
-                <ul class="text-sm text-red-700 space-y-1">
-                    ${resultados.fallidos.map(f => `<li>• ${f.email}: ${f.error}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-            }
-
-            mensaje += `
-            </div>
-            <button onclick="cerrarModalResultados()" class="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
-                Cerrar
-            </button>
-        </div>
-    `;
-
-            const modal = `
-        <div id="resultados-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            ${mensaje}
-        </div>
-    `;
-
-            document.body.insertAdjacentHTML('beforeend', modal);
-        }
-
-        function cerrarModalResultados() {
-            document.getElementById('resultados-modal')?.remove();
-        }
-
-        // ============================================
-        // PREPARAR Y EJECUTAR ENVÍO
-        // ============================================
-        async function prepararEnvioMasivo(meetingId) {
-            try {
-                await ensureEmailJS();
-                const response = await fetch(`/meetings/${meetingId}/email-data`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error al obtener datos del servidor');
-                }
-
-                const data = await response.json();
-
-                if (!data.participantes || data.participantes.length === 0) {
-                    alert('No hay participantes registrados para enviar correos');
-                    return;
-                }
-
-                if (!data.documentos || data.documentos.length === 0) {
-                    alert('No hay documentos para enviar');
-                    return;
-                }
-
-                const confirmar = confirm(
-                    `¿Confirmas el envío de ${data.documentos.length} documento(s) a ${data.participantes.length} participante(s)?`
-                );
-
-                if (confirmar) {
-                    await enviarDocumentosMasivo(meetingId, data.participantes, {
-                        meeting: data.meeting,
-                        files: data.documentos,
-                        sender: data.sender
-                    });
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al preparar el envío: ' + error.message);
-            }
-        }
-
-        // ============================================
-        // REGISTRAR ENVÍOS EN EL SERVIDOR
-        // ============================================
-        async function registrarEnvios(meetingId, resultados) {
-            try {
-                const recipients = [
-                    ...resultados.exitosos.map(email => ({
-                        email,
-                        status: 'success'
-                    })),
-                    ...resultados.fallidos.map(f => ({
-                        email: f.email,
-                        status: 'failed',
-                        error: f.error
-                    }))
-                ];
-
-                await fetch(`/api/meetings/${meetingId}/email-log`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        recipients
-                    })
-                });
-            } catch (error) {
-                console.error('Error registrando envíos:', error);
-            }
-        }
-
-        async function ensureEmailJS() {
-            if (window.emailjs) {
-                if (!window.__emailjsInitialized) {
-                    emailjs.init(EMAILJS_CONFIG.publicKey);
-                    window.__emailjsInitialized = true;
-                }
-                return;
-            }
-            await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-                s.onload = () => {
-                    try {
-                        emailjs.init(EMAILJS_CONFIG.publicKey);
-                        window.__emailjsInitialized = true;
-                        resolve();
-                    } catch (err) {
-                        reject(err);
-                    }
-                };
-                s.onerror = () => reject(new Error('No se pudo cargar EmailJS'));
-                document.head.appendChild(s);
-            });
-        }
+    <script type="module">
+        // Ya no necesitas todo el código aquí, solo se importa desde los módulos
+        console.log('Servicios de documentos cargados');
     </script>
-@endpush

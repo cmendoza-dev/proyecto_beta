@@ -1,6 +1,10 @@
 import Alpine from 'alpinejs';
 import Swal from 'sweetalert2';
 
+// Importar módulos de documentos
+import './modules/documentService.js';
+import './modules/attendanceScanner.js';
+
 // Make Alpine available globally
 window.Alpine = Alpine;
 window.Swal = Swal;

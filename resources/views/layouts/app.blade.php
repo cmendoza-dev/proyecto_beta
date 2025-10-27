@@ -355,6 +355,34 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                             <div x-show="open" @click.away="open = false" x-cloak x-transition
                                 class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                                 <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-semibold text-gray-900">Notificaciones</p>
+                                </div>
+
+                                <div class="py-2 max-h-64 overflow-y-auto">
+                                    <!-- Aquí puedes agregar las notificaciones -->
+                                    <div class="px-4 py-3 text-center text-sm text-gray-500">
+                                        No hay notificaciones nuevas
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Card al final -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="flex items-center space-x-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-full p-1 pr-2 hover:shadow-md transition-all">
+                                <div
+                                    class="flex items-center justify-center w-10 h-10 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full font-semibold text-sm shadow-md">
+                                    {{ strtoupper(substr(auth()->user()->first_name, 0, 1)) }}
+                                </div>
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div x-show="open" @click.away="open = false" x-cloak x-transition
+                                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                                <div class="px-4 py-3 border-b border-gray-100">
                                     <p class="text-sm font-medium text-gray-900">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</p>
                                     <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
                                 </div>
@@ -395,21 +423,6 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                                             Cerrar Sesión
                                         </button>
                                     </form>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- User Card al final -->
-                        <div x-show="!sidebarCollapsed" x-transition
-                            class=" m-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-full">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="flex items-center justify-center w-10 h-10 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full font-semibold text-sm shadow-md">
-                                    {{ strtoupper(substr(auth()->user()->first_name, 0, 1)) }}
-                                </div>
-                                <div class="pr-4">
-                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -468,7 +481,6 @@ $watch('sidebarCollapsed', s => localStorage.setItem('sidebarCollapsed', s));" :
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
                                 </div>
                                 <div class="ml-3 flex-1">
                                     <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>

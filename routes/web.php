@@ -46,6 +46,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/meetings/{meeting}/email-log', [EmailDocumentsController::class, 'logEmailSend']);
     Route::get('/meetings/{meeting}/email-history', [EmailDocumentsController::class, 'getEmailHistory']);
 
+    // Ruta para enviar documentos por WhatsApp
+    Route::post('/meetings/{meeting}/enviar-whatsapp', [WhatsAppController::class, 'enviarWhatsApp'])
+    ->name('meetings.enviar-whatsapp');
+
     // Secretary and Administrator routes
     Route::middleware('role:Secretary|Administrator')->group(function () {
         Route::resource('meetings', MeetingController::class);

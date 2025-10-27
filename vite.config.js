@@ -10,4 +10,17 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'document-services': [
+                        './resources/js/modules/emailService.js',
+                        './resources/js/modules/whatsappService.js',
+                        './resources/js/modules/documentService.js'
+                    ]
+                }
+            }
+        }
+    }
 });
